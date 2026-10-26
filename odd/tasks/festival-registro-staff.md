@@ -2,7 +2,7 @@
 
 Objetivo: app pública de registro + panel de staff, sobre Supabase, deploy en Vercel Hobby.
 Rama: `feat/festival-registro-staff` · Base: `Festival/app` (Vite + React, JavaScript puro).
-Delivery: `ask-on-risk` (default). Test runner: ninguno todavía — los checks son `npm run build`, `vite preview`, curl contra Supabase (PRD §14) y `k6` (PRD §17.5).
+Delivery: `ask-on-risk` (default). Test runner: `node --test` (script `npm test`), sin dependencias extra; más `npm run build`, `vite preview`, curl contra Supabase (PRD §14) y `k6` (PRD §17.5).
 Fuente de verdad: `PRD (1).md` en la raíz del repo. Este documento no reemplaza al PRD; lo traduce a tareas verificables.
 
 ## Specs
@@ -28,8 +28,8 @@ Fuente de verdad: `PRD (1).md` en la raíz del repo. Este documento no reemplaza
 ## Tasks
 
 - T1 · S1,S2 · inline · hecho · `e9b84ac` · F1 base del proyecto en `Festival/app`. Verificado: `npm run build` ok y `/`, `/staff`, `/staff/login` responden 200 en `vite preview`.
-- T2 · S3,S4,S5,S6 · inline · escrito, sin verificar · `004a11e` · F2 `supabase/schema.sql`. Verificación bloqueada: falta proyecto Supabase real (S16/T10).
-- T3 · S7,S8,S9 · inline · pendiente · F3 registro público `/`.
+- T2 · S3,S4,S5,S6 · inline · aplicado y verificado en parte · `004a11e` · F2 `supabase/schema.sql`. Aplicado en el proyecto `xksbpniurmqekfkmrmmd`. Tests 1, 2, 3 y 6 de S16 ejecutados contra la API real: pasan (L12).
+- T3 · S7,S8,S9 · inline · hecho · `f590450` · F3 registro público `/`. `npm test` 11/11, `npm run build` ok, errores verificados con `@supabase/supabase-js` real (L16). Falta la prueba manual desde un celular.
 - T4 · S10 · inline · pendiente · F4 login de staff y ruta protegida.
 - T5 · S11 · inline · pendiente · F5 panel: lista, buscador, contadores.
 - T6 · S12 · inline · pendiente · F6 entrega de entradas y deshacer.
@@ -56,3 +56,7 @@ Fuente de verdad: `PRD (1).md` en la raíz del repo. Este documento no reemplaza
 - **L13** (2026-10-26): `GET /auth/v1/settings` devolvió `external.email: false`, `disable_signup: false`, `mailer_autoconfirm: false`. Es decir: el proveedor Email quedó **apagado** (el staff no podría iniciar sesión) y el alta pública quedó **encendida**. Hay que invertir ambos: Email ON, "Allow new users to sign up" OFF.
 - **L14** (2026-10-26): Corrección al PRD. El test 6 espera `400` para la violación de FK, pero PostgREST devuelve **409** tanto para `23503` como para `23505`. Consecuencia de diseño para F3: el formulario debe mapear los mensajes por `error.code`, nunca por el status HTTP.
 - **L15**: `.env` tenía `VITE_SUPABASE_URL` con la URL del dashboard (`supabase.com/dashboard/project/<ref>/`) en vez de `https://<ref>.supabase.co`. Corregido en el archivo local (no versionado).
+- **L16** (2026-10-26): T3 cerrado en `f590450`. `npm test` → 11/11. `npm run build` → 480,68 kB. Los cuatro caminos de error se probaron con `@supabase/supabase-js` real, no solo con curl: insert válido devuelve `data: null` y `error` undefined; DNI repetido `23505`; localidad inexistente `23503`; violación de `check` `23514`. `gentle-ai review assess --base-ref main --committed-only` → `risk: medium`, `review_due: false`, `review_due_reason: under_budget`; no se inicia revisión y el boundary sigue en `main`.
+- **L17**: El honeypot se llamaba `company` con label "Empresa", que es exactamente lo que el autofill de Chrome usa para rellenar la organización. Un humano con autofill habría quedado bloqueado en silencio. Renombrado a `hp-field` con label "No completar".
+- **L18** (2026-10-26): Bug de entorno que costó una hora. `Set-Content -Encoding utf8` en PowerShell 5.1 escribe BOM (`EF BB BF`), así que la primera clave del `.env` quedaba como `\uFEFFVITE_SUPABASE_URL` y Vite **ignoraba las dos variables sin avisar**. Síntoma: el bundle bajaba a 260 kB, arrancaba con el `throw` de `supabase.js` y no incluía ningún componente; el build decía "ok" igual. Diagnóstico: comparar strings del bundle contra el fuente y leer los primeros bytes del `.env`. Regla para el resto del proyecto: escribir el `.env` con `[System.IO.File]::WriteAllText($path, $text, (New-Object System.Text.UTF8Encoding($false)))` y verificar el build buscando un string de la UI en `dist/assets/*.js`.
+- **L19** (2026-10-26): Filas de prueba que quedaron en la base y hay que borrar desde el SQL Editor (el anónimo no tiene DELETE): DNI `12345678` (curl), `11111111` (SDK). Las de DNI inexistente/localidad mala no se crearon.
