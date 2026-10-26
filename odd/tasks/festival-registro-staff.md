@@ -1,0 +1,52 @@
+# Festival — Registro de asistentes y control de entrega de entradas (v1)
+
+Objetivo: app pública de registro + panel de staff, sobre Supabase, deploy en Vercel Hobby.
+Rama: `feat/festival-registro-staff` · Base: `Festival/app` (Vite + React, JavaScript puro).
+Delivery: `ask-on-risk` (default). Test runner: ninguno todavía — los checks son `npm run build`, `vite preview`, curl contra Supabase (PRD §14) y `k6` (PRD §17.5).
+Fuente de verdad: `PRD (1).md` en la raíz del repo. Este documento no reemplaza al PRD; lo traduce a tareas verificables.
+
+## Specs
+
+- **S1 — Stack.** Solo JavaScript: ningún `.ts`, `.tsx` ni `tsconfig.json`. React + Vite (template `react`), `react-router-dom`, `@supabase/supabase-js`. Sin backend propio. Host: Vercel Hobby (no Netlify).
+- **S2 — Build y ruteo.** `npm run build` pasa. `vercel.json` en la raíz de la app con `{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}` para que `/staff` y `/staff/login` no den 404 al recargar. Rutas: `/`, `/staff/login`, `/staff`.
+- **S3 — Modelo de datos.** Tablas `public.localities (name text primary key)` y `public.registrations` con: `id uuid pk default gen_random_uuid()`, `full_name text not null check (char_length(full_name) between 2 and 120)`, `dni text not null unique check (dni ~ '^[0-9]{7,9}$')`, `email text check (email is null or email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$')`, `locality text not null references public.localities(name)`, `address text check (address is null or char_length(address) <= 120)`, `dni_photo_url text`, `ticket_delivered boolean not null default false`, `delivered_at timestamptz`, `delivered_by uuid references auth.users(id)`, `locality_verified boolean not null default false`, `verified_at timestamptz`, `verified_by uuid references auth.users(id)`, `verify_note text check (verify_note is null or char_length(verify_note) <= 300)`, `created_at timestamptz not null default now()`. Índices: `lower(full_name)` y `locality`.
+- **S4 — Seguridad.** RLS activo en ambas tablas. `anon`: solo INSERT y solo en estado inicial (`ticket_delivered = false and delivered_at is null and delivered_by is null and locality_verified = false and verified_at is null and verified_by is null`); sin SELECT, UPDATE ni DELETE. `authenticated`: SELECT total, INSERT de alta en puerta, UPDATE limitado por grants de columna a `ticket_delivered, locality_verified, verify_note, locality, address`. Sin grant sobre `delivered_at/delivered_by/verified_at/verified_by`. `localities` legible por `anon` y `authenticated`. Solo `anon key` en el frontend; nunca `service_role`.
+- **S5 — Trigger de auditoría.** `public.set_staff_metadata()` BEFORE UPDATE, `security definer`, `set search_path = public`: al pasar `ticket_delivered` a `true` setea `delivered_by := auth.uid()` y `delivered_at := now()`; al volver a `false` los limpia; si no cambió, restaura los valores de `old`. Misma lógica para `locality_verified` / `verified_by` / `verified_at`. El frontend nunca envía esos campos.
+- **S6 — Realtime.** `alter publication supabase_realtime add table public.registrations;`. Solo el staff se suscribe. Fallback: refresco cada 30 s + botón "Actualizar".
+- **S7 — Registro público.** Campos: Nombre y apellido (2–120, obligatorio), DNI (7–9 dígitos, obligatorio, único), Localidad (`<select>` desde `localities`, obligatoria), Email (obligatorio en público, formato válido), Domicilio declarado (opcional, ≤120). Copys exactos: éxito `¡Listo, quedaste registrado!`; DNI duplicado (`23505`) `Este DNI ya está registrado.`; localidad inválida (`23503`) `Elegí una localidad de la lista.`; otro error `Ocurrió un error. Intentá de nuevo en unos minutos.` Insert **sin** `.select()`.
+- **S8 — Anti-spam.** Honeypot oculto; time-trap que rechaza envíos de menos de ~3 s desde la carga; captcha opcional por flag en `config.js`; botón `Registrarme` deshabilitado mientras envía; reintento con backoff ante fallo de red; saturación: `Estamos recibiendo muchos registros, esperá unos segundos e intentá de nuevo`.
+- **S9 — Normalización.** DNI sin puntos ni espacios; email en minúsculas; nombre sin espacios sobrantes.
+- **S10 — Login de staff.** `/staff/login`, email + contraseña con `supabase.auth.signInWithPassword`, error claro si las credenciales son incorrectas, redirección a `/staff` si ya hay sesión. `/staff` protegida: sin sesión redirige a `/staff/login`.
+- **S11 — Panel.** Contador `Entregadas X / Verificadas V / Registrados Y` y botón "Cerrar sesión". Buscador siempre visible por nombre o DNI, sin distinguir mayúsculas ni acentos (`toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")`). Lista con nombre, DNI, mail, localidad, estado de entrada (Pendiente / Entregada) y de verificación (Sin verificar / Verificada / Excepción). Tarjetas en celular, tabla en escritorio. Orden: pendientes y sin verificar primero, luego alfabético. Estado vacío `No se encontraron resultados`. Estado de carga.
+- **S12 — Entrega de entrada.** Botón grande "Entregar entrada" que envía solo `{ ticket_delivered: true }`; muestra "Entregada" con hora; si ya estaba entregada ofrece "Deshacer" con confirmación (`{ ticket_delivered: false }`); en modo estricto y sin verificar, confirmación extra antes de entregar.
+- **S13 — Verificación de localidad.** Por registro sin verificar: "Localidad OK" y "Excepción". La excepción exige nota con motivo (≤300). Envía solo `{ locality_verified, verify_note }`. Modo estricto/flexible desde `config.js`. El staff puede corregir `locality` antes de verificar.
+- **S14 — Alta en puerta.** Botón "Registrar en puerta": nombre, DNI, email opcional, localidad del select. Al guardar, la persona queda en la lista y se le puede entregar la entrada. Si el DNI ya existe, el buscador lo muestra en vez de crear un duplicado.
+- **S15 — No funcionales.** Mobile first, probar a 360 px; botones de mínimo 44 px de alto; labels en inputs, contraste suficiente, foco visible; textos en español (Argentina); nombre del evento, logo y color en `src/config.js`.
+- **S16 — Pruebas de seguridad (PRD §14).** Los 8 curl deben dar el resultado esperado: (1) anon no lee → permiso denegado; (2) anon registra → 201 sin contenido; (3) anon no marca entregas → error; (4) staff lee y actualiza; (5) `delivered_by/delivered_at` falsificados son sobrescritos por el trigger; (6) localidad inexistente → 400 `23503`, nunca 201; (7) staff da de alta en puerta → 201 sin email; (8) `verified_by/verified_at` falsificados son sobrescritos.
+- **S17 — Deploy y entrega.** Vercel preset Vite, build `npm run build`, output `dist`; `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` en Production, Preview y Development; `.env.example`; README con creación del proyecto Supabase, alta manual de usuarios de staff, variables y deploy. Prueba de carga: 100 VUs, ~50 registros/min, 5 min, p95 del insert < 2 s, error < 1 %, cero duplicados.
+
+## Tasks
+
+- T1 · S1,S2 · inline · hecho · `e9b84ac` · F1 base del proyecto en `Festival/app`. Verificado: `npm run build` ok y `/`, `/staff`, `/staff/login` responden 200 en `vite preview`.
+- T2 · S3,S4,S5,S6 · inline · escrito, sin verificar · `004a11e` · F2 `supabase/schema.sql`. Verificación bloqueada: falta proyecto Supabase real (S16/T10).
+- T3 · S7,S8,S9 · inline · pendiente · F3 registro público `/`.
+- T4 · S10 · inline · pendiente · F4 login de staff y ruta protegida.
+- T5 · S11 · inline · pendiente · F5 panel: lista, buscador, contadores.
+- T6 · S12 · inline · pendiente · F6 entrega de entradas y deshacer.
+- T7 · S13 · inline · pendiente · F7 verificación de localidad.
+- T8 · S14 · inline · pendiente · F8 alta en puerta.
+- T9 · S6 · inline · pendiente · F9 sincronización Realtime + fallback.
+- T10 · S16 · inline · pendiente · F10 validación con curl (requiere proyecto Supabase real).
+- T11 · S17 · inline · pendiente · F11 deploy Vercel, load test, README.
+
+## Log
+
+- **L1** (pedido original, textual): "Debemos trabajar con el PRD y generar esa página web. Me podes dar una mano generando los features que hay que hacer así lo vayamos generando paso por paso y explicando lo que se debe hacer en cada paso?"
+- **L2**: Decisión de ubicación: `App nueva en Festival/app`. El demo de escáner QR existente en `Festival/frontend` queda intacto (el PRD §4 excluye QR explícitamente). `backend/`, `database/` y `docs/` no se usan.
+- **L3**: Estilos con CSS simple y tokens (`src/index.css`), no Tailwind. El PRD lo permite (§5) y evita configuración extra sobre Vite 8.
+- **L4** (2026-10-26): Bloqueante conocido para T2 y T10 — hace falta un proyecto Supabase real con `schema.sql` aplicado, localidades cargadas y usuarios de staff creados a mano (PRD §19). Sin eso, T2 se entrega como SQL revisable y T10 queda pendiente de ejecución.
+- **L5**: Pronóstico de líneas propias: ~1300. Como supera el umbral de ~400, la estrategia de entrega (`ask-on-risk`) exige preguntar una vez por el esquema de PRs encadenados antes del primer commit que cruce el umbral; se consulta al llegar a F5, no antes.
+- **L6**: Espejo en Engram pendiente: el proyecto resuelto por `mem_current_project` desde el workspace no está registrado (`unknown_project` con `available_projects` ambiguo). Se preserva el documento local; no se adivina la clave de proyecto.
+- **L7** (2026-10-26): T1 cerrado en `e9b84ac`. Versiones instaladas: React 19.3.1, Vite 8.3.5, react-router-dom 7.18.4, @supabase/supabase-js 2.118.0, Node 24.21.0. `src/lib/supabase.js` lanza un error legible si faltan las variables de entorno; el build no ejecuta ese módulo, así que compila sin `.env`.
+- **L8** (2026-10-26): T2 entregado en `004a11e` como SQL revisable, sin aplicar. Riesgo declarado: ítem 2 (seguridad). La verificación real son los 8 curl de S16, que necesitan el proyecto Supabase creado.
+- **L9**: Excepción de test-first registrada para T1/T2: no existe runner de tests en el scope del PRD y T2 se valida con los curl de integración, no con unit tests. Checks usados: `npm run build`, `vite preview` con las tres rutas, y revisión línea por línea del SQL contra PRD §7/§8.
