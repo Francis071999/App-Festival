@@ -3,9 +3,11 @@ import { config } from '../config'
 import { supabase } from '../lib/supabase'
 import {
   MESSAGES,
+  RETRY_DELAYS_MS,
   buildRegistrationPayload,
   isNetworkError,
   messageForInsertError,
+  planSubmit,
   validateRegistration,
 } from '../lib/registration'
 
@@ -40,30 +42,39 @@ export default function Register() {
   const [loadingLocalities, setLoadingLocalities] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [registered, setRegistered] = useState(false)
+  const [localitiesAttempt, setLocalitiesAttempt] = useState(0)
   const mountedAt = useRef(Date.now())
   const honeypot = useRef('')
 
   useEffect(() => {
     let active = true
+    setLoadingLocalities(true)
+    setLocalitiesError('')
 
-    supabase
-      .from('localities')
-      .select('name')
-      .order('name')
-      .then(({ data, error }) => {
+    ;(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('localities')
+          .select('name')
+          .order('name')
         if (!active) return
         if (error) {
           setLocalitiesError(MESSAGES.localitiesUnavailable)
         } else {
           setLocalities((data ?? []).map((row) => row.name))
         }
-        setLoadingLocalities(false)
-      })
+      } catch {
+        // Sin este catch, un rechazo deja el botón deshabilitado para siempre.
+        if (active) setLocalitiesError(MESSAGES.localitiesUnavailable)
+      } finally {
+        if (active) setLoadingLocalities(false)
+      }
+    })()
 
     return () => {
       active = false
     }
-  }, [])
+  }, [localitiesAttempt])
 
   const update = (field, transform) => (event) => {
     const value = transform ? transform(event.target.value) : event.target.value
@@ -88,18 +99,21 @@ export default function Register() {
     if (!canSubmit) return
     setFormError('')
 
-    // Honeypot: un humano no ve este campo, un bot sí lo completa.
-    if (honeypot.current) return
+    const plan = planSubmit({
+      values,
+      honeypot: honeypot.current,
+      elapsedMs: Date.now() - mountedAt.current,
+      timeTrapMs: config.timeTrapMs,
+    })
 
-    if (Date.now() - mountedAt.current < config.timeTrapMs) {
-      setFormError(MESSAGES.tooFast)
+    if (plan.action === 'blocked') {
+      setFormError(plan.message)
       return
     }
 
-    const nextErrors = validateRegistration(values)
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors)
-      document.getElementById(Object.keys(nextErrors)[0])?.focus()
+    if (plan.action === 'invalid') {
+      setErrors(plan.errors)
+      document.getElementById(Object.keys(plan.errors)[0])?.focus()
       return
     }
 
@@ -109,14 +123,17 @@ export default function Register() {
     try {
       // Sin .select(): el usuario anónimo no tiene permiso de lectura.
       let result = await supabase.from('registrations').insert(payload)
+      let retried = false
 
-      if (result.error && isNetworkError(result.error)) {
-        await sleep(1500)
+      for (const delay of RETRY_DELAYS_MS) {
+        if (!result.error || !isNetworkError(result.error)) break
+        retried = true
+        await sleep(delay)
         result = await supabase.from('registrations').insert(payload)
       }
 
       if (result.error) {
-        setFormError(messageForInsertError(result.error))
+        setFormError(messageForInsertError(result.error, { retried }))
         return
       }
 
@@ -275,9 +292,16 @@ export default function Register() {
         </div>
 
         {localitiesError ? (
-          <p className="alert alert-error" role="alert">
-            {localitiesError}
-          </p>
+          <div className="alert alert-error" role="alert">
+            <p>{localitiesError}</p>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setLocalitiesAttempt((attempt) => attempt + 1)}
+            >
+              Reintentar
+            </button>
+          </div>
         ) : null}
 
         {noLocalities ? (

@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   MESSAGES,
+  RETRY_DELAYS_MS,
   buildRegistrationPayload,
   isNetworkError,
   messageForInsertError,
@@ -9,6 +10,7 @@ import {
   normalizeDni,
   normalizeEmail,
   normalizeName,
+  planSubmit,
   validateRegistration,
 } from './registration.js'
 
@@ -83,4 +85,59 @@ test('solo se considera error de red cuando no hay código de Postgres', () => {
   assert.equal(isNetworkError({ message: 'TypeError: Failed to fetch', code: '23505' }), false)
   assert.equal(isNetworkError({ message: 'duplicate key value', code: '23505' }), false)
   assert.equal(isNetworkError(null), false)
+})
+
+test('el reintento automático espera cada vez más entre intentos', () => {
+  assert.equal(RETRY_DELAYS_MS.length, 2)
+  assert.ok(RETRY_DELAYS_MS.every((ms) => ms > 0))
+  assert.ok(RETRY_DELAYS_MS[1] > RETRY_DELAYS_MS[0])
+})
+
+test('un 23505 después de un reintento no asegura que el DNI estaba duplicado', () => {
+  // El primer intento pudo llegar al servidor y perderse la respuesta: en ese
+  // caso el reintento choca con nuestra propia fila, no con otra persona.
+  assert.equal(
+    messageForInsertError({ code: '23505' }, { retried: true }),
+    MESSAGES.maybeRegistered,
+  )
+  assert.notEqual(MESSAGES.maybeRegistered, MESSAGES.duplicateDni)
+})
+
+test('un 23505 sin reintento sí es un DNI duplicado', () => {
+  assert.equal(messageForInsertError({ code: '23505' }, { retried: false }), MESSAGES.duplicateDni)
+  assert.equal(messageForInsertError({ code: '23505' }), MESSAGES.duplicateDni)
+})
+
+test('un envío válido se deja pasar', () => {
+  assert.deepEqual(planSubmit({ values: VALID, honeypot: '', elapsedMs: 5000, timeTrapMs: 3000 }), {
+    action: 'submit',
+  })
+})
+
+test('el honeypot bloquea el envío con un mensaje visible', () => {
+  const plan = planSubmit({ values: VALID, honeypot: 'spam', elapsedMs: 5000, timeTrapMs: 3000 })
+  assert.equal(plan.action, 'blocked')
+  assert.equal(plan.message, MESSAGES.honeypotBlocked)
+})
+
+test('un envío demasiado rápido se bloquea con su propio mensaje', () => {
+  const plan = planSubmit({ values: VALID, honeypot: '', elapsedMs: 500, timeTrapMs: 3000 })
+  assert.equal(plan.action, 'blocked')
+  assert.equal(plan.message, MESSAGES.tooFast)
+})
+
+test('el honeypot gana sobre el time-trap y sobre la validación', () => {
+  const plan = planSubmit({ values: {}, honeypot: 'spam', elapsedMs: 0, timeTrapMs: 3000 })
+  assert.equal(plan.message, MESSAGES.honeypotBlocked)
+})
+
+test('un formulario inválido devuelve los errores por campo', () => {
+  const plan = planSubmit({
+    values: { ...VALID, dni: '' },
+    honeypot: '',
+    elapsedMs: 5000,
+    timeTrapMs: 3000,
+  })
+  assert.equal(plan.action, 'invalid')
+  assert.deepEqual(Object.keys(plan.errors), ['dni'])
 })

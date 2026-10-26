@@ -172,6 +172,15 @@ textarea {
   font-size: 0.95rem;
 }
 
+.alert p {
+  margin: 0;
+}
+
+/* Un alert con acción (ej: reintentar) deja aire antes del botón. */
+.alert .btn {
+  margin-top: 0.5rem;
+}
+
 .alert-error {
   background: #fef2f2;
   border: 1px solid #fecaca;

@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useSession } from '../lib/useSession'
-import { normalizeEmail } from '../lib/registration'
+import { MESSAGES, normalizeEmail } from '../lib/registration'
 import { messageForAuthError, validateLogin } from '../lib/staff-auth'
 
 export default function StaffLogin() {
-  const { session, loading } = useSession()
+  const { session, loading, error: sessionError } = useSession()
   const navigate = useNavigate()
 
   const [email, setEmail] = useState('')
@@ -73,6 +73,12 @@ export default function StaffLogin() {
       </header>
 
       <form className="card form" onSubmit={handleSubmit} noValidate>
+        {sessionError ? (
+          <p className="alert alert-error" role="alert">
+            {MESSAGES.sessionUnavailable}
+          </p>
+        ) : null}
+
         <div className="field">
           <label htmlFor="email">Email</label>
           <input
