@@ -36,7 +36,7 @@ Fuente de verdad: `PRD (1).md` en la raíz del repo. Este documento no reemplaza
 - T7 · S13 · inline · pendiente · F7 verificación de localidad.
 - T8 · S14 · inline · pendiente · F8 alta en puerta.
 - T9 · S6 · inline · pendiente · F9 sincronización Realtime + fallback.
-- T10 · S16 · inline · pendiente · F10 validación con curl (requiere proyecto Supabase real).
+- T10 · S16 · inline · parcial · F10 validación con curl. Pasan: 1, 2, 3, 6 y DNI duplicado. Pendientes 4, 5, 7 y 8 (requieren sesión de staff).
 - T11 · S17 · inline · pendiente · F11 deploy Vercel, load test, README.
 
 ## Log
@@ -52,3 +52,7 @@ Fuente de verdad: `PRD (1).md` en la raíz del repo. Este documento no reemplaza
 - **L9**: Excepción de test-first registrada para T1/T2: no existe runner de tests en el scope del PRD y T2 se valida con los curl de integración, no con unit tests. Checks usados: `npm run build`, `vite preview` con las tres rutas, y revisión línea por línea del SQL contra PRD §7/§8.
 - **L10** (2026-10-26): RDD efectivo `on` (fuente `global`). `gentle-ai review assess --base-ref main --committed-only` sobre `e9b84ac..aaf0dc8` devolvió `risk: medium`, `review_due: false`, `review_due_reason: under_budget` (18 paths, 1571 líneas, dominadas por `package-lock.json`). No se inicia revisión; el boundary sigue en `main` y el slice queda abierto.
 - **L11**: Observación sobre el PRD, no aplicada: la policy `anon can register` no restringe `dni_photo_url`, pero el grant de INSERT sí lo incluye, así que un anónimo podría insertar una URL arbitraria en ese campo. Con `enableDniPhoto: false` el campo queda nulo en la práctica. Si el cliente activa la foto, conviene agregar el chequeo a la policy o mover la subida a una función. No se cambió el SQL porque el PRD lo especifica así.
+- **L12** (2026-10-26): Proyecto Supabase `xksbpniurmqekfkmrmmd` operativo. Pruebas ejecutadas contra la API real: test 1 → `42501 permission denied` (401); test 2 → `201` sin body; test 3 → `42501` (401); test 6 → `23503` violación de FK; DNI duplicado → `23505` y sin fila nueva. La tabla tiene una sola localidad cargada: `BELLA VISTA`.
+- **L13** (2026-10-26): `GET /auth/v1/settings` devolvió `external.email: false`, `disable_signup: false`, `mailer_autoconfirm: false`. Es decir: el proveedor Email quedó **apagado** (el staff no podría iniciar sesión) y el alta pública quedó **encendida**. Hay que invertir ambos: Email ON, "Allow new users to sign up" OFF.
+- **L14** (2026-10-26): Corrección al PRD. El test 6 espera `400` para la violación de FK, pero PostgREST devuelve **409** tanto para `23503` como para `23505`. Consecuencia de diseño para F3: el formulario debe mapear los mensajes por `error.code`, nunca por el status HTTP.
+- **L15**: `.env` tenía `VITE_SUPABASE_URL` con la URL del dashboard (`supabase.com/dashboard/project/<ref>/`) en vez de `https://<ref>.supabase.co`. Corregido en el archivo local (no versionado).
