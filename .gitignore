@@ -1,0 +1,6 @@
+# Documentos internos de planificación: no forman parte del entregable.
+odd/
+PRD*.md
+
+# Herramientas locales del entorno de desarrollo.
+.atl/
