@@ -2,6 +2,8 @@
 
 Registro público de asistentes y panel de staff para controlar la entrega de entradas. React + Vite (JavaScript puro) sobre Supabase, pensado para celular y desplegado en Vercel.
 
+> ¿Querés un resumen de lo que ya está hecho, explicado sin tecnicismos? Ver [AVANCES.md](AVANCES.md).
+
 ## Requisitos
 
 - Node.js 20 o superior
