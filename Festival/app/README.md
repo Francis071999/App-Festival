@@ -15,14 +15,14 @@ Registro público de asistentes y panel de staff para controlar la entrega de en
    npm install
    ```
 
-2. Crear el archivo `.env` a partir de `.env.example` y completar con los datos de **Supabase → Project Settings → API**:
+2. Crear el archivo `.env` a partir de `.env.example` y completar con los datos de **Supabase → Project Settings → API Keys**:
 
    ```
    VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
    VITE_SUPABASE_ANON_KEY=tu_anon_key
    ```
 
-   Usar **solo** la `anon key`. La `service_role key` nunca va en el frontend.
+   En `VITE_SUPABASE_ANON_KEY` va la **publishable key** (`sb_publishable_...`) o, si el proyecto todavía tiene la legacy, la `anon key` (`eyJ...`). Las dos son públicas y están protegidas por RLS. **Nunca** la secret key (`sb_secret_...`) ni la `service_role`: esas bypassean RLS.
 
 3. Aplicar el esquema: abrir **Supabase → SQL Editor**, pegar el contenido completo de [`supabase/schema.sql`](supabase/schema.sql) y ejecutarlo una sola vez. Después, reemplazar las localidades de ejemplo por las reales:
 
@@ -31,9 +31,9 @@ Registro público de asistentes y panel de staff para controlar la entrega de en
    insert into public.localities (name) values ('Localidad real 1'), ('Localidad real 2');
    ```
 
-4. Desactivar el alta pública de usuarios en **Authentication → Providers → Email**: apagar "Allow new users to sign up".
+4. Desactivar el alta pública de usuarios en **Authentication → Sign In / Providers → Email**: apagar "Allow new users to sign up".
 
-5. Crear a mano los usuarios del staff en **Authentication → Users → Add user**.
+5. Crear a mano los usuarios del staff en **Authentication → Users → Add user**, con "Auto Confirm User" activado.
 
 6. Levantar el entorno local:
 
