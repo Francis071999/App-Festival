@@ -1,0 +1,382 @@
+:root {
+  --accent: #e11d48;
+  --accent-contrast: #ffffff;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --danger: #b91c1c;
+  --success: #15803d;
+  --radius: 12px;
+  --touch: 44px;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  margin: 0 0 0.5rem;
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+.page {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 1rem 0.75rem 2.5rem;
+  }
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.logo {
+  display: block;
+  max-height: 72px;
+  margin: 0 auto 0.75rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.form-intro {
+  margin: 0;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 16px;
+}
+
+.field input[aria-invalid='true'],
+.field select[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.field-hint,
+.field-error {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.field-hint {
+  color: var(--muted);
+}
+
+.field-error {
+  color: var(--danger);
+}
+
+.btn {
+  min-height: var(--touch);
+  padding: 0.65rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.alert {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.alert p {
+  margin: 0;
+}
+
+/* Un alert con acción (ej: reintentar) deja aire antes del botón. */
+.alert .btn {
+  margin-top: 0.5rem;
+}
+
+.alert-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--danger);
+}
+
+.success {
+  text-align: center;
+}
+
+.success h2 {
+  color: var(--success);
+}
+
+/* Honeypot: invisible para personas, visible para bots. No usar display:none. */
+.hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+   Panel de staff
+   --------------------------------------------------------------------------- */
+
+.page-wide {
+  max-width: 960px;
+}
+
+.staff-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.staff-header h1 {
+  font-size: 1.35rem;
+}
+
+.staff-header p {
+  margin: 0;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.counters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.counter {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.5rem;
+  text-align: center;
+}
+
+.counter-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.counter-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* El buscador queda pegado arriba: sigue visible al scrollear la lista. */
+.search-bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg);
+  padding: 0.5rem 0 0.75rem;
+}
+
+.search-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.search-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.empty {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.reg-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.reg-table th,
+.reg-table td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.reg-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border-bottom-width: 2px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-ok {
+  background: #dcfce7;
+  color: #14532d;
+}
+
+.badge-pending {
+  background: #fef3c7;
+  color: #78350f;
+}
+
+.badge-time {
+  font-size: 0.8rem;
+}
+
+/* En celular la tabla se convierte en tarjetas: la etiqueta de cada celda
+   sale de `data-label`, así no duplicamos el marcado. */
+@media (max-width: 720px) {
+  .reg-table,
+  .reg-table tbody,
+  .reg-table tr,
+  .reg-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .reg-table thead {
+    display: none;
+  }
+
+  .reg-table tr {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 0.6rem;
+    padding: 0.35rem 0;
+  }
+
+  .reg-table td {
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.3rem 0.75rem;
+  }
+
+  .reg-table td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+
+  /* El nombre es el título de la tarjeta: no necesita etiqueta. */
+  .reg-table td:first-child {
+    font-size: 1.05rem;
+    font-weight: 600;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.15rem;
+  }
+
+  .reg-table td:first-child::before {
+    content: none;
+  }
+}
