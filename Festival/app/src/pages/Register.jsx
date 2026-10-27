@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { config } from '../config'
 import { supabase } from '../lib/supabase'
-import DniInputSection from '../components/DniInputSection'
 import {
   MESSAGES,
   RETRY_DELAYS_MS,
@@ -16,12 +15,12 @@ const EMPTY_VALUES = {
   fullName: '',
   dni: '',
   locality: '',
-  email: '',
+  phone: '',
   address: '',
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-const FIELD_NAMES = ['fullName', 'dni', 'locality', 'email', 'address']
+const FIELD_NAMES = ['fullName', 'dni', 'locality', 'phone', 'address']
 
 function EventHeader() {
   return (
@@ -81,7 +80,6 @@ export default function Register() {
   const [localitiesAttempt, setLocalitiesAttempt] = useState(0)
   const mountedAt = useRef(Date.now())
   const honeypot = useRef('')
-  const dniSectionRef = useRef()
 
   useEffect(() => {
     let active = true
@@ -116,12 +114,6 @@ export default function Register() {
     const value = transform ? transform(event.target.value) : event.target.value
     setValues((prev) => ({ ...prev, [field]: value }))
     setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev))
-    if (formError) setFormError('')
-  }
-
-  const setDni = (newDni) => {
-    setValues((prev) => ({ ...prev, dni: newDni }))
-    setErrors((prev) => (prev.dni ? { ...prev, dni: undefined } : prev))
     if (formError) setFormError('')
   }
 
@@ -161,15 +153,7 @@ export default function Register() {
     setSubmitting(true)
 
     try {
-      let dniPhotoUrl = null
-      if (dniSectionRef.current) {
-        dniPhotoUrl = await dniSectionRef.current.uploadFoto()
-      }
-
-      const payload = {
-        ...buildRegistrationPayload(values),
-        dni_photo_url: dniPhotoUrl,
-      }
+      const payload = buildRegistrationPayload(values)
 
       let result = await supabase.from('registrations').insert(payload)
       let retried = false
@@ -277,12 +261,41 @@ export default function Register() {
             ) : null}
           </div>
 
-          <DniInputSection
-            ref={dniSectionRef}
-            dni={values.dni}
-            setDni={setDni}
-            error={errors.dni}
-          />
+          <div className="field">
+            <label htmlFor="dni" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.375rem', color: '#1e293b' }}>
+              DNI
+            </label>
+            <input
+              id="dni"
+              name="dni"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={9}
+              value={values.dni}
+              onChange={update('dni', (value) => value.replace(/\D/g, '').slice(0, 9))}
+              style={{
+                width: '100%',
+                padding: '0.625rem 0.875rem',
+                borderRadius: '0.5rem',
+                border: errors.dni ? '1px solid #ef4444' : '1px solid #cbd5e1',
+                outline: 'none',
+                fontSize: '0.95rem',
+                backgroundColor: '#ffffff'
+              }}
+              aria-invalid={Boolean(errors.dni)}
+              aria-describedby={errors.dni ? 'dni-error' : 'dni-hint'}
+            />
+            {errors.dni ? (
+              <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }} id="dni-error">
+                {errors.dni}
+              </p>
+            ) : (
+              <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.25rem' }} id="dni-hint">
+                Sin puntos, entre 7 y 9 dígitos.
+              </p>
+            )}
+          </div>
 
           <div className="field">
             <label htmlFor="locality" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.375rem', color: '#1e293b' }}>
@@ -323,33 +336,40 @@ export default function Register() {
           </div>
 
           <div className="field">
-            <label htmlFor="email" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.375rem', color: '#1e293b' }}>
-              Email
+            <label htmlFor="phone" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.375rem', color: '#1e293b' }}>
+              Número de celular
             </label>
             <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              inputMode="email"
-              value={values.email}
-              onChange={update('email')}
+              id="phone"
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              inputMode="tel"
+              maxLength={20}
+              placeholder="Ej: 3777412345"
+              value={values.phone}
+              onChange={update('phone')}
               style={{
                 width: '100%',
                 padding: '0.625rem 0.875rem',
                 borderRadius: '0.5rem',
-                border: errors.email ? '1px solid #ef4444' : '1px solid #cbd5e1',
+                border: errors.phone ? '1px solid #ef4444' : '1px solid #cbd5e1',
                 outline: 'none',
-                fontSize: '0.95rem'
+                fontSize: '0.95rem',
+                backgroundColor: '#ffffff'
               }}
-              aria-invalid={Boolean(errors.email)}
-              aria-describedby={errors.email ? 'email-error' : undefined}
+              aria-invalid={Boolean(errors.phone)}
+              aria-describedby={errors.phone ? 'phone-error' : 'phone-hint'}
             />
-            {errors.email ? (
-              <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }} id="email-error">
-                {errors.email}
+            {errors.phone ? (
+              <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }} id="phone-error">
+                {errors.phone}
               </p>
-            ) : null}
+            ) : (
+              <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.25rem' }} id="phone-hint">
+                Con código de área, sin 0 ni 15.
+              </p>
+            )}
           </div>
 
           <div className="field">

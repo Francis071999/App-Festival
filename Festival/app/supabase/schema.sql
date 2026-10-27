@@ -27,7 +27,8 @@ create table public.registrations (
   id uuid primary key default gen_random_uuid(),
   full_name text not null check (char_length(full_name) between 2 and 120),
   dni text not null unique check (dni ~ '^[0-9]{7,9}$'),
-  email text check (email is null or email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+  email text check (email is null or email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'), -- legado: ya no se pide
+  phone text check (phone is null or phone ~ '^[0-9]{10}$'),
   locality text not null references public.localities(name),
   address text check (address is null or char_length(address) <= 120),
   dni_photo_url text,
@@ -102,8 +103,8 @@ using (true);
 
 -- Permisos a nivel tabla/columna
 revoke all on public.registrations from anon, authenticated;
-grant insert (full_name, dni, email, locality, address, dni_photo_url) on public.registrations to anon;
-grant insert (full_name, dni, email, locality, address, dni_photo_url) on public.registrations to authenticated;
+grant insert (full_name, dni, phone, locality, address, dni_photo_url) on public.registrations to anon;
+grant insert (full_name, dni, phone, locality, address, dni_photo_url) on public.registrations to authenticated;
 grant select on public.registrations to authenticated;
 -- El staff NO puede escribir delivered_at/delivered_by ni verified_at/verified_by:
 -- los completa el trigger. No hay grant sobre esas columnas.

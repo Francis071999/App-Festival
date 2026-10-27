@@ -33,6 +33,8 @@ Registro público de asistentes y panel de staff para controlar la entrega de en
    insert into public.localities (name) values ('Localidad real 1'), ('Localidad real 2');
    ```
 
+   > Si la base ya estaba creada antes del cambio de email a celular, ejecutar también [`supabase/migracion-celular.sql`](supabase/migracion-celular.sql) una sola vez.
+
 4. Desactivar el alta pública de usuarios en **Authentication → Sign In / Providers → Email**: apagar "Allow new users to sign up".
 
 5. Crear a mano los usuarios del staff en **Authentication → Users → Add user**, con "Auto Confirm User" activado.

@@ -15,6 +15,7 @@ const row = (overrides) => ({
   full_name: 'Ana Pérez',
   dni: '30123456',
   email: 'ana@ejemplo.com',
+  phone: '3777412345',
   locality: 'BELLA VISTA',
   ticket_delivered: false,
   delivered_at: null,
