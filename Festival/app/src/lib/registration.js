@@ -4,7 +4,7 @@
 
 export const MESSAGES = {
   success: '¡Listo, quedaste registrado!',
-  duplicateDni: 'Este DNI ya está registrado.',
+  duplicateDni: 'El DNI no es válido porque ya está registrado.',
   maybeRegistered:
     'No pudimos confirmar tu registro. Si el intento anterior llegó a guardarse, ya estás anotado: no lo repitas, consultá con el staff en la puerta.',
   invalidLocality: 'Elegí una localidad de la lista.',
