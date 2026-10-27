@@ -5,7 +5,7 @@ export const config = {
   eventName: 'Festival CIAC',
   eventTagline: 'Registrate para asegurar tu entrada.',
   eventDescription:
-    'Completá tus datos y te esperamos en la puerta con tu entrada.',
+    'Completá tus datos y te esperamos para que retires tu entrada',
   logoUrl: '',
   accentColor: '#e11d48',
 
