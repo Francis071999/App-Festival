@@ -5,7 +5,7 @@ import App from './App'
 import { config } from './config'
 import './index.css'
 
-document.title = config.eventName
+document.title = 'Aniversario Bella Vista'
 document.documentElement.style.setProperty('--accent', config.accentColor)
 
 createRoot(document.getElementById('root')).render(
