@@ -28,40 +28,44 @@ function EventHeader() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: '1rem',
+      gap: '1.25rem',
       marginBottom: '1.75rem',
       textAlign: 'left'
     }}>
-      {/* Logo de la Municipalidad de Bella Vista */}
+      {/* Nuevo Logo 150 Años Aniversario */}
       <img
-        src="/img/logo muni.jpg"
-        alt="Logo Municipalidad de Bella Vista"
+        src="/img/muni aniversario.jpg"
+        alt="Logo Bella Vista 150 Años"
         style={{
-          height: '70px',
-          width: '70px',
+          height: '80px',
+          width: '80px',
           borderRadius: '50%',
           objectFit: 'cover',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+          border: '2px solid #D4AF37',
+          boxShadow: '0 4px 12px rgba(212, 175, 55, 0.25)',
           flexShrink: 0
         }}
       />
       <div>
         <h1 style={{
-          fontSize: '1.3rem',
+          fontSize: '1.25rem',
           fontWeight: 800,
-          color: '#0f172a',
+          color: '#F3E5AB',
           margin: 0,
-          lineHeight: 1.2
+          lineHeight: 1.25,
+          letterSpacing: '0.02em'
         }}>
-          Festival del Aniversario de los 150 años Bella Vista
+          Festival Aniversario 150 Años
         </h1>
         <p style={{
           fontSize: '0.85rem',
-          color: '#0284c7',
+          color: '#D4AF37',
           margin: '0.25rem 0 0 0',
-          fontWeight: 600
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em'
         }}>
-          Registrate para asegurar tu entrada
+          Bella Vista • 1876-2026
         </p>
       </div>
     </header>
@@ -182,25 +186,35 @@ export default function Register() {
     return (
       <main style={{
         minHeight: '100vh',
-        backgroundColor: '#0f172a',
+        backgroundColor: '#120708',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '1.5rem'
       }}>
         <div style={{
-          backgroundColor: '#ffffff',
+          backgroundColor: '#1D0E10',
           borderRadius: '1rem',
           padding: '2.5rem',
           maxWidth: '480px',
           width: '100%',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
+          border: '1px solid rgba(212, 175, 55, 0.4)',
+          boxShadow: '0 20px 30px rgba(0, 0, 0, 0.7)',
           textAlign: 'center'
         }}>
           <EventHeader />
-          <div style={{ padding: '1rem', backgroundColor: '#f0fdf4', borderRadius: '0.75rem', border: '1px solid #bbf7d0' }}>
-            <h2 style={{ color: '#166534', margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>{MESSAGES.success}</h2>
-            <p style={{ color: '#15803d', margin: 0, fontSize: '0.9rem' }}>Te esperamos en la puerta. Llevá tu DNI.</p>
+          <div style={{
+            padding: '1.25rem',
+            backgroundColor: 'rgba(212, 175, 55, 0.1)',
+            borderRadius: '0.75rem',
+            border: '1px solid #D4AF37'
+          }}>
+            <h2 style={{ color: '#F3E5AB', margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 700 }}>
+              {MESSAGES.success}
+            </h2>
+            <p style={{ color: '#D1C7BD', margin: 0, fontSize: '0.9rem' }}>
+              Te esperamos en la puerta. Llevá tu DNI.
+            </p>
           </div>
         </div>
       </main>
@@ -210,29 +224,30 @@ export default function Register() {
   return (
     <main style={{
       minHeight: '100vh',
-      backgroundColor: '#0f172a',
+      backgroundColor: '#120708',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '2rem 1rem'
     }}>
       <div style={{
-        backgroundColor: '#ffffff',
-        borderRadius: '1rem',
+        backgroundColor: '#1D0E10',
+        borderRadius: '1.25rem',
         padding: '2rem',
         maxWidth: '520px',
         width: '100%',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)'
+        border: '1px solid rgba(212, 175, 55, 0.35)',
+        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.8)'
       }}>
         <EventHeader />
 
         <form onSubmit={handleSubmit} onBlur={handleBlur} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>
+          <p style={{ fontSize: '0.875rem', color: '#D1C7BD', margin: 0, textAlign: 'center' }}>
             {config.eventDescription || 'Completá tus datos y te esperamos en la puerta con tu entrada.'}
           </p>
 
           <div className="field">
-            <label htmlFor="fullName" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.375rem', color: '#1e293b' }}>
+            <label htmlFor="fullName" style={{ display: 'block', fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.375rem', color: '#C5A059', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Nombre y apellido
             </label>
             <input
@@ -247,22 +262,25 @@ export default function Register() {
                 width: '100%',
                 padding: '0.625rem 0.875rem',
                 borderRadius: '0.5rem',
-                border: errors.fullName ? '1px solid #ef4444' : '1px solid #cbd5e1',
+                border: errors.fullName ? '1px solid #f87171' : '1px solid #4A2B20',
                 outline: 'none',
-                fontSize: '0.95rem'
+                fontSize: '0.95rem',
+                backgroundColor: '#120708',
+                color: '#ffffff',
+                boxSizing: 'border-box'
               }}
               aria-invalid={Boolean(errors.fullName)}
               aria-describedby={errors.fullName ? 'fullName-error' : undefined}
             />
             {errors.fullName ? (
-              <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }} id="fullName-error">
+              <p style={{ color: '#f87171', fontSize: '0.8rem', marginTop: '0.25rem' }} id="fullName-error">
                 {errors.fullName}
               </p>
             ) : null}
           </div>
 
           <div className="field">
-            <label htmlFor="dni" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.375rem', color: '#1e293b' }}>
+            <label htmlFor="dni" style={{ display: 'block', fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.375rem', color: '#C5A059', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               DNI
             </label>
             <input
@@ -278,27 +296,29 @@ export default function Register() {
                 width: '100%',
                 padding: '0.625rem 0.875rem',
                 borderRadius: '0.5rem',
-                border: errors.dni ? '1px solid #ef4444' : '1px solid #cbd5e1',
+                border: errors.dni ? '1px solid #f87171' : '1px solid #4A2B20',
                 outline: 'none',
                 fontSize: '0.95rem',
-                backgroundColor: '#ffffff'
+                backgroundColor: '#120708',
+                color: '#ffffff',
+                boxSizing: 'border-box'
               }}
               aria-invalid={Boolean(errors.dni)}
               aria-describedby={errors.dni ? 'dni-error' : 'dni-hint'}
             />
             {errors.dni ? (
-              <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }} id="dni-error">
+              <p style={{ color: '#f87171', fontSize: '0.8rem', marginTop: '0.25rem' }} id="dni-error">
                 {errors.dni}
               </p>
             ) : (
-              <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.25rem' }} id="dni-hint">
+              <p style={{ color: '#A39688', fontSize: '0.8rem', marginTop: '0.25rem' }} id="dni-hint">
                 Sin puntos, entre 7 y 9 dígitos.
               </p>
             )}
           </div>
 
           <div className="field">
-            <label htmlFor="locality" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.375rem', color: '#1e293b' }}>
+            <label htmlFor="locality" style={{ display: 'block', fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.375rem', color: '#C5A059', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Localidad
             </label>
             <select
@@ -311,32 +331,34 @@ export default function Register() {
                 width: '100%',
                 padding: '0.625rem 0.875rem',
                 borderRadius: '0.5rem',
-                border: errors.locality ? '1px solid #ef4444' : '1px solid #cbd5e1',
+                border: errors.locality ? '1px solid #f87171' : '1px solid #4A2B20',
                 outline: 'none',
                 fontSize: '0.95rem',
-                backgroundColor: '#ffffff'
+                backgroundColor: '#120708',
+                color: '#ffffff',
+                boxSizing: 'border-box'
               }}
               aria-invalid={Boolean(errors.locality)}
               aria-describedby={errors.locality ? 'locality-error' : undefined}
             >
-              <option value="">
+              <option value="" style={{ backgroundColor: '#120708', color: '#ffffff' }}>
                 {loadingLocalities ? 'Cargando localidades…' : 'Elegí tu localidad'}
               </option>
               {localities.map((name) => (
-                <option key={name} value={name}>
+                <option key={name} value={name} style={{ backgroundColor: '#120708', color: '#ffffff' }}>
                   {name}
                 </option>
               ))}
             </select>
             {errors.locality ? (
-              <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }} id="locality-error">
+              <p style={{ color: '#f87171', fontSize: '0.8rem', marginTop: '0.25rem' }} id="locality-error">
                 {errors.locality}
               </p>
             ) : null}
           </div>
 
           <div className="field">
-            <label htmlFor="phone" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.375rem', color: '#1e293b' }}>
+            <label htmlFor="phone" style={{ display: 'block', fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.375rem', color: '#C5A059', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Número de celular
             </label>
             <input
@@ -346,35 +368,37 @@ export default function Register() {
               autoComplete="tel"
               inputMode="tel"
               maxLength={20}
-              placeholder="Ej: 3777412345"
+              placeholder="Ej: 3811234567"
               value={values.phone}
               onChange={update('phone')}
               style={{
                 width: '100%',
                 padding: '0.625rem 0.875rem',
                 borderRadius: '0.5rem',
-                border: errors.phone ? '1px solid #ef4444' : '1px solid #cbd5e1',
+                border: errors.phone ? '1px solid #f87171' : '1px solid #4A2B20',
                 outline: 'none',
                 fontSize: '0.95rem',
-                backgroundColor: '#ffffff'
+                backgroundColor: '#120708',
+                color: '#ffffff',
+                boxSizing: 'border-box'
               }}
               aria-invalid={Boolean(errors.phone)}
               aria-describedby={errors.phone ? 'phone-error' : 'phone-hint'}
             />
             {errors.phone ? (
-              <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }} id="phone-error">
+              <p style={{ color: '#f87171', fontSize: '0.8rem', marginTop: '0.25rem' }} id="phone-error">
                 {errors.phone}
               </p>
             ) : (
-              <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.25rem' }} id="phone-hint">
+              <p style={{ color: '#A39688', fontSize: '0.8rem', marginTop: '0.25rem' }} id="phone-hint">
                 Con código de área, sin 0 ni 15.
               </p>
             )}
           </div>
 
           <div className="field">
-            <label htmlFor="address" style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.375rem', color: '#1e293b' }}>
-              Domicilio declarado (opcional)
+            <label htmlFor="address" style={{ display: 'block', fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.375rem', color: '#C5A059', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+              Domicilio declarado 
             </label>
             <input
               id="address"
@@ -388,15 +412,18 @@ export default function Register() {
                 width: '100%',
                 padding: '0.625rem 0.875rem',
                 borderRadius: '0.5rem',
-                border: errors.address ? '1px solid #ef4444' : '1px solid #cbd5e1',
+                border: errors.address ? '1px solid #f87171' : '1px solid #4A2B20',
                 outline: 'none',
-                fontSize: '0.95rem'
+                fontSize: '0.95rem',
+                backgroundColor: '#120708',
+                color: '#ffffff',
+                boxSizing: 'border-box'
               }}
               aria-invalid={Boolean(errors.address)}
               aria-describedby={errors.address ? 'address-error' : undefined}
             />
             {errors.address ? (
-              <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }} id="address-error">
+              <p style={{ color: '#f87171', fontSize: '0.8rem', marginTop: '0.25rem' }} id="address-error">
                 {errors.address}
               </p>
             ) : null}
@@ -418,12 +445,12 @@ export default function Register() {
           </div>
 
           {localitiesError ? (
-            <div style={{ padding: '0.75rem', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.5rem' }}>
-              <p style={{ color: '#991b1b', fontSize: '0.85rem', margin: '0 0 0.5rem 0' }}>{localitiesError}</p>
+            <div style={{ padding: '0.75rem', backgroundColor: 'rgba(239, 68, 68, 0.15)', border: '1px solid #f87171', borderRadius: '0.5rem' }}>
+              <p style={{ color: '#fca5a5', fontSize: '0.85rem', margin: '0 0 0.5rem 0' }}>{localitiesError}</p>
               <button
                 type="button"
                 onClick={() => setLocalitiesAttempt((attempt) => attempt + 1)}
-                style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem', borderRadius: '0.375rem', cursor: 'pointer' }}
+                style={{ padding: '0.375rem 0.75rem', fontSize: '0.8rem', borderRadius: '0.375rem', cursor: 'pointer', backgroundColor: '#D4AF37', border: 'none', fontWeight: 600, color: '#120708' }}
               >
                 Reintentar
               </button>
@@ -431,13 +458,13 @@ export default function Register() {
           ) : null}
 
           {noLocalities ? (
-            <p style={{ color: '#991b1b', fontSize: '0.85rem', margin: 0 }}>
+            <p style={{ color: '#fca5a5', fontSize: '0.85rem', margin: 0 }}>
               {MESSAGES.noLocalities}
             </p>
           ) : null}
 
           {formError ? (
-            <p style={{ color: '#991b1b', fontSize: '0.85rem', margin: 0 }}>
+            <p style={{ color: '#fca5a5', fontSize: '0.85rem', margin: 0 }}>
               {formError}
             </p>
           ) : null}
@@ -448,15 +475,20 @@ export default function Register() {
             style={{
               marginTop: '0.5rem',
               width: '100%',
-              padding: '0.75rem 1rem',
-              backgroundColor: canSubmit ? '#0284c7' : '#94a3b8',
-              color: '#ffffff',
-              fontWeight: 700,
+              padding: '0.875rem 1rem',
+              background: canSubmit
+                ? 'linear-gradient(135deg, #D4AF37 0%, #F3E5AB 50%, #B8860B 100%)'
+                : '#4A2B20',
+              color: canSubmit ? '#1D0E10' : '#888888',
+              fontWeight: 800,
               fontSize: '1rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
               borderRadius: '0.5rem',
               border: 'none',
               cursor: canSubmit ? 'pointer' : 'not-allowed',
-              transition: 'background-color 0.2s ease'
+              boxShadow: canSubmit ? '0 4px 15px rgba(212, 175, 55, 0.3)' : 'none',
+              transition: 'all 0.2s ease'
             }}
           >
             {submitting ? 'Enviando…' : 'Registrarme'}
