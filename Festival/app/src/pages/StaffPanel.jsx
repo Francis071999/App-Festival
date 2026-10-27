@@ -130,7 +130,7 @@ export default function StaffPanel() {
     <main className={confirming ? 'page page-wide has-confirm' : 'page page-wide'}>
       <header className="staff-header">
         <div>
-          <h1>{config.eventName}</h1>
+          <h1>Aniversario Bella Vista</h1>
           <p className="muted">Panel de staff · {session?.user?.email ?? 'sin email'}</p>
         </div>
         <button type="button" className="btn btn-secondary" onClick={handleSignOut}>
