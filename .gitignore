@@ -4,3 +4,5 @@ PRD*.md
 
 # Herramientas locales del entorno de desarrollo.
 .atl/
+.vercel
+.env*
