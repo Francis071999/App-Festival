@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { config } from '../config'
 import { supabase } from '../lib/supabase'
 import { useSession } from '../lib/useSession'
+import { ACTION_MESSAGES, planTicketAction, ticketPayload } from '../lib/staff-actions'
 import {
   VERIFICATION_LABELS,
   countRegistrations,
@@ -12,7 +13,7 @@ import {
 
 // Columnas justas: el staff no necesita el id de quien entregó ni la foto.
 const COLUMNS =
-  'id, full_name, dni, email, locality, ticket_delivered, delivered_at, locality_verified, verify_note, created_at'
+  'id, full_name, dni, phone, locality, ticket_delivered, delivered_at, locality_verified, verify_note, created_at'
 
 const LOAD_ERROR = 'No pudimos cargar la lista. Revisá la conexión e intentá de nuevo.'
 
@@ -38,6 +39,11 @@ export default function StaffPanel() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [signOutError, setSignOutError] = useState('')
+  const [actionError, setActionError] = useState('')
+  const [busyId, setBusyId] = useState('')
+  const [confirming, setConfirming] = useState(null)
+
+  const strict = config.localityVerificationMode === 'strict'
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -78,10 +84,50 @@ export default function StaffPanel() {
     }
   }
 
-  const emptyMessage = rows.length === 0 ? 'Todavía no hay personas registradas.' : 'No se encontraron resultados.'
+  async function commitAction(row, action) {
+    setActionError('')
+    setConfirming(null)
+    setBusyId(row.id)
+
+    try {
+      // El trigger de la base completa delivered_at y delivered_by.
+      const { data, error } = await supabase
+        .from('registrations')
+        .update(ticketPayload(action === 'deliver'))
+        .eq('id', row.id)
+        .select(COLUMNS)
+        .single()
+
+      if (error || !data) {
+        setActionError(ACTION_MESSAGES.saveError)
+        return
+      }
+
+      setRows((previous) => previous.map((item) => (item.id === row.id ? data : item)))
+    } catch {
+      setActionError(ACTION_MESSAGES.saveError)
+    } finally {
+      setBusyId('')
+    }
+  }
+
+  function requestAction(row, action) {
+    const plan = planTicketAction(row, action, { strict })
+    if (!plan.allowed) return
+
+    if (plan.confirmation) {
+      setConfirming({ row, action, message: plan.confirmation })
+      return
+    }
+
+    void commitAction(row, action)
+  }
+
+  const emptyMessage =
+    rows.length === 0 ? 'Todavía no hay personas registradas.' : 'No se encontraron resultados.'
 
   return (
-    <main className="page page-wide">
+    <main className={confirming ? 'page page-wide has-confirm' : 'page page-wide'}>
       <header className="staff-header">
         <div>
           <h1>{config.eventName}</h1>
@@ -138,6 +184,12 @@ export default function StaffPanel() {
         </div>
       </div>
 
+      {actionError ? (
+        <p className="alert alert-error" role="alert">
+          {actionError}
+        </p>
+      ) : null}
+
       {loadError ? (
         <div className="alert alert-error" role="alert">
           <p>{loadError}</p>
@@ -165,10 +217,11 @@ export default function StaffPanel() {
             <tr>
               <th scope="col">Nombre</th>
               <th scope="col">DNI</th>
-              <th scope="col">Email</th>
+              <th scope="col">Celular</th>
               <th scope="col">Localidad</th>
               <th scope="col">Entrada</th>
               <th scope="col">Verificación</th>
+              <th scope="col">Acción</th>
             </tr>
           </thead>
           <tbody>
@@ -176,7 +229,7 @@ export default function StaffPanel() {
               <tr key={row.id}>
                 <td data-label="Nombre">{row.full_name}</td>
                 <td data-label="DNI">{row.dni}</td>
-                <td data-label="Email">{row.email || '—'}</td>
+                <td data-label="Celular">{row.phone || '—'}</td>
                 <td data-label="Localidad">{row.locality}</td>
                 <td data-label="Entrada">
                   <span
@@ -191,9 +244,7 @@ export default function StaffPanel() {
                 </td>
                 <td data-label="Verificación">
                   <span
-                    className={`badge ${
-                      row.locality_verified ? 'badge-ok' : 'badge-pending'
-                    }`}
+                    className={`badge ${row.locality_verified ? 'badge-ok' : 'badge-pending'}`}
                     title={row.verify_note ?? ''}
                   >
                     {verificationLabel(row)}
@@ -202,10 +253,51 @@ export default function StaffPanel() {
                     <span className="muted badge-time"> {row.verify_note}</span>
                   ) : null}
                 </td>
+                <td data-label="Acción" className="cell-action">
+                  {row.ticket_delivered ? (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-block"
+                      disabled={busyId === row.id}
+                      onClick={() => requestAction(row, 'undo')}
+                    >
+                      {busyId === row.id ? 'Guardando…' : 'Deshacer'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-block"
+                      disabled={busyId === row.id}
+                      onClick={() => requestAction(row, 'deliver')}
+                    >
+                      {busyId === row.id ? 'Guardando…' : 'Entregar entrada'}
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+      ) : null}
+
+      {confirming ? (
+        <div className="confirm-bar" role="alertdialog" aria-label="Confirmar acción">
+          <p>
+            <strong>{confirming.row.full_name}</strong> — {confirming.message}
+          </p>
+          <div className="confirm-actions">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void commitAction(confirming.row, confirming.action)}
+            >
+              Sí, {confirming.action === 'deliver' ? 'entregar' : 'deshacer'}
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={() => setConfirming(null)}>
+              Cancelar
+            </button>
+          </div>
+        </div>
       ) : null}
     </main>
   )

@@ -10,6 +10,7 @@ import {
   normalizeDni,
   normalizeEmail,
   normalizeName,
+  normalizePhone,
   planSubmit,
   validateRegistration,
 } from './registration.js'
@@ -18,15 +19,22 @@ const VALID = {
   fullName: 'Ana María Pérez',
   dni: '30123456',
   locality: 'BELLA VISTA',
-  email: 'ana@ejemplo.com',
+  phone: '3777412345',
   address: 'Calle 123',
 }
 
-test('normaliza nombre, DNI, email y domicilio', () => {
+test('normaliza nombre, DNI, celular y domicilio', () => {
   assert.equal(normalizeName('  Ana   María  '), 'Ana María')
   assert.equal(normalizeDni('30.123.456'), '30123456')
-  assert.equal(normalizeEmail('  ANA@Ejemplo.COM '), 'ana@ejemplo.com')
+  assert.equal(normalizePhone(' 3777 412 345 '), '3777412345')
   assert.equal(normalizeAddress('  Calle 123  '), 'Calle 123')
+})
+
+test('el celular se normaliza sin 0 ni código de país', () => {
+  assert.equal(normalizePhone('03777-412345'), '3777412345')
+  assert.equal(normalizePhone('+54 9 3777 412345'), '3777412345')
+  // normalizeEmail queda para el login del staff, no para el registro público.
+  assert.equal(normalizeEmail('  STAFF@Ejemplo.COM '), 'staff@ejemplo.com')
 })
 
 test('el DNI se recorta a 9 dígitos', () => {
@@ -34,8 +42,8 @@ test('el DNI se recorta a 9 dígitos', () => {
 })
 
 test('un formulario vacío devuelve errores en los cuatro campos obligatorios', () => {
-  const errors = validateRegistration({ fullName: '', dni: '', locality: '', email: '', address: '' })
-  assert.deepEqual(Object.keys(errors).sort(), ['dni', 'email', 'fullName', 'locality'])
+  const errors = validateRegistration({ fullName: '', dni: '', locality: '', phone: '', address: '' })
+  assert.deepEqual(Object.keys(errors).sort(), ['dni', 'fullName', 'locality', 'phone'])
 })
 
 test('rechaza un DNI de menos de 7 dígitos', () => {
@@ -43,9 +51,14 @@ test('rechaza un DNI de menos de 7 dígitos', () => {
   assert.equal(errors.dni, 'El DNI debe tener entre 7 y 9 dígitos, sin puntos.')
 })
 
-test('rechaza un email sin formato válido', () => {
-  const errors = validateRegistration({ ...VALID, email: 'ana-arroba-ejemplo' })
-  assert.equal(errors.email, 'Ingresá un email válido.')
+test('rechaza un celular que no tiene 10 dígitos', () => {
+  const errors = validateRegistration({ ...VALID, phone: '377741234' })
+  assert.equal(errors.phone, 'Ingresá un número de celular de 10 dígitos, sin 0 ni 15.')
+})
+
+test('acepta el celular escrito con 0 o con código de país', () => {
+  assert.deepEqual(validateRegistration({ ...VALID, phone: '03777412345' }), {})
+  assert.deepEqual(validateRegistration({ ...VALID, phone: '+54 9 3777 412345' }), {})
 })
 
 test('rechaza un nombre de un solo caracter', () => {
@@ -67,7 +80,7 @@ test('el payload va normalizado y con address null si está vacío', () => {
   assert.deepEqual(payload, {
     full_name: 'Ana Pérez',
     dni: '30123456',
-    email: 'ana@ejemplo.com',
+    phone: '3777412345',
     locality: 'BELLA VISTA',
     address: null,
   })

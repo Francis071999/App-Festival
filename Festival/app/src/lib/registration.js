@@ -31,7 +31,21 @@ export const normalizeName = (value = '') => value.trim().replace(/\s+/g, ' ')
 
 export const normalizeDni = (value = '') => value.replace(/\D/g, '').slice(0, 9)
 
+// Email del login del staff (Supabase Auth). El registro público ya no lo pide.
 export const normalizeEmail = (value = '') => value.trim().toLowerCase()
+
+/**
+ * Celular en formato nacional de 10 dígitos. Acepta el número escrito con
+ * espacios, guiones, paréntesis, el 0 inicial o el prefijo internacional
+ * +54 9, y guarda solo los 10 dígitos.
+ */
+export const normalizePhone = (value = '') => {
+  let digits = String(value).replace(/\D/g, '')
+  if (digits.startsWith('54')) digits = digits.slice(2)
+  if (digits.startsWith('9')) digits = digits.slice(1)
+  if (digits.startsWith('0')) digits = digits.slice(1)
+  return digits
+}
 
 export const normalizeAddress = (value = '') => value.trim()
 
@@ -62,11 +76,11 @@ export function validateRegistration(values) {
     errors.locality = 'Elegí tu localidad.'
   }
 
-  const email = normalizeEmail(values.email)
-  if (!email) {
-    errors.email = 'Ingresá tu email.'
-  } else if (!EMAIL_PATTERN.test(email)) {
-    errors.email = 'Ingresá un email válido.'
+  const phone = normalizePhone(values.phone)
+  if (!phone) {
+    errors.phone = 'Ingresá tu número de celular.'
+  } else if (!/^\d{10}$/.test(phone)) {
+    errors.phone = 'Ingresá un número de celular de 10 dígitos, sin 0 ni 15.'
   }
 
   const address = normalizeAddress(values.address)
@@ -85,7 +99,7 @@ export function buildRegistrationPayload(values) {
   return {
     full_name: normalizeName(values.fullName),
     dni: normalizeDni(values.dni),
-    email: normalizeEmail(values.email),
+    phone: normalizePhone(values.phone),
     locality: values.locality,
     address: normalizeAddress(values.address) || null,
   }

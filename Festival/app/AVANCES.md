@@ -66,8 +66,8 @@ y una localidad que no está en la lista también.
 
 ### Etapa 3 — Registro público
 
-Es el formulario que ve la gente. Pide nombre y apellido, DNI, localidad, email
-y domicilio (opcional).
+Es el formulario que ve la gente. Pide nombre y apellido, DNI, localidad, número
+de celular y domicilio (opcional).
 
 Cosas que resolvimos y vale la pena contar:
 

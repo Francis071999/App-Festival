@@ -379,4 +379,58 @@ textarea {
   .reg-table td:first-child::before {
     content: none;
   }
+
+  /* En la tarjeta el botón ocupa todo el ancho y no lleva etiqueta. */
+  .reg-table td.cell-action::before {
+    content: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Entrega de entrada
+   --------------------------------------------------------------------------- */
+
+.btn-block {
+  width: 100%;
+}
+
+.cell-action {
+  min-width: 9.5rem;
+}
+
+/* Barra fija abajo: en una lista larga, la confirmación tiene que quedar a la
+   vista sin importar dónde esté la fila que se tocó. */
+.confirm-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  border-top: 2px solid var(--accent);
+  box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.15);
+}
+
+.confirm-bar p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.confirm-actions .btn {
+  flex: 1;
+}
+
+/* Espacio extra para que la barra no tape la última fila. */
+.has-confirm {
+  padding-bottom: 12rem;
 }
